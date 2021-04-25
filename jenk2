@@ -1,0 +1,331 @@
+Deploy on a docker container using Jenkins
+Deploy_on_Container
+Pre-requisites
+Jenkins server
+Docker-host server
+Dockerfile under /home/dockeradmin in user home directory on docker host
+# Pull tomcat latest image from dockerhub 
+From tomcat
+# Maintainer
+MAINTAINER "AR Shankar" 
+
+# copy war file on to container 
+COPY ./webapp.war /usr/local/tomcat/webapps
+Integration between Docker-host and Jenkins
+Install "publish Over SSH"
+
+Manage Jenkins > Manage Plugins > Available > Publish over SSH
+Enable connection between Docker-host and Jenkins
+
+Manage Jenkins > Configure System > Publish Over SSH > SSH Servers
+
+SSH Servers: - Name: docker-host
+Hostname:<ServerIP>
+
+username: dockeradmin
+
+Advanced > chose Use password authentication, or use a different key
+
+password: *******
+
+Steps to create "Deploy_on_Container" Jenkin job
+From Jenkins home page select "New Item"
+Enter an item name: Deploy_on_Container
+
+Copy from: Deploy_on_Docker_Host
+Source Code Management:
+
+Repository: https://github.com/yankils/hello-world.git
+Branches to build : */master
+Poll SCM : - * * * *
+
+Build:
+
+Root POM:pom.xml
+Goals and options: clean install package
+Post-build Actions
+
+Send build artifacts over SSH
+SSH Publishers
+SSH Server Name: docker-host
+Transfers > Transfer set
+Source files: webapp/target/*.war
+Remove prefix: webapp/target
+Remote directory: //home//ansadmin or .
+Exec command:
+cd /home/dockeradmin;
+docker build -t simple-devops-image .; 
+docker run -d --name simple-devops-container -p 8080:8080 simple-devops-image;
+Save and run the job now.
+
+
+Deploy on a docker container using Ansible
+Jenkins Job name: Deploy_on_Container_using_ansible
+Pre-requisites
+Jenkins server
+Docker-host server
+Ansible server
+Dockerfile under /opt/docker on Ansible server Get Help Here
+# Pull tomcat latest image from dockerhub 
+From tomcat
+# Maintainer
+MAINTAINER "AR Shankar" 
+
+# copy war file on to container 
+COPY ./webapp.war /usr/local/tomcat/webapps
+Create create-docker-image.yml unser /opt/docker on Ansible server Get Help Here
+---
+- hosts: all
+  #ansadmin doesn't need root access to create an image
+  become: true 
+
+  tasks:
+  - name: building docker image
+    command: "docker build -t simple-devops-image ." 
+    args:
+      chdir: /opt/docker
+Create create-docker-image.yml under /opt/docker on Ansible server Get Help Here
+---
+- hosts: all
+  become: ture
+
+  tasks:
+  - name: creating docker image using docker command
+    command: docker run -d --name simple-devops-container -p 8080:8080 simple-devops-image
+Integration between Ansible-control-node and Jenkins
+Install "publish Over SSH"
+
+Manage Jenkins > Manage Plugins > Available > Publish over SSH
+Enable connection between Ansible-control-node and Jenkins
+
+Manage Jenkins > Configure System > Publish Over SSH > SSH Servers
+
+SSH Servers: - Name: ansible-server
+Hostname:<ServerIP>
+
+username: ansadmin
+
+Advanced > chose Use password authentication, or use a different key
+
+password: *******
+
+Steps to create "Deploy_on_Container_using_ansible" Jenkin job
+From Jenkins home page select "New Item"
+Enter an item name: Deploy_on_Container_using_ansible
+
+Copy from: Deploy_on_Container
+Source Code Management:
+
+Repository: https://github.com/yankils/hello-world.git
+Branches to build : */master
+Poll SCM : - * * * *
+
+Build:
+
+Root POM:pom.xml
+Goals and options: clean install package
+Post-build Actions
+
+Send build artifacts over SSH
+SSH Publishers
+SSH Server Name: ansible-server
+Transfers > Transfer set
+Source files: webapp/target/*.war
+Remove prefix: webapp/target
+Remote directory: //opt//docker
+Exec command:
+ansible-playbook -i /opt/docker/hosts /opt/docker/create-docker-image.yml;
+Save and run the job now.
+
+
+Deploy on Docker host server using Jenkins
+Jenkins Job name: Deploy_on_Docker_Host
+Pre-requisites
+Jenkins server
+Docker-host Server
+Integration between Docker-host and Jenkins
+Install "publish Over SSH"
+
+Manage Jenkins > Manage Plugins > Available > Publish over SSH
+Enable connection between Docker-host and Jenkins
+
+Manage Jenkins > Configure System > Publish Over SSH > SSH Servers
+
+SSH Servers: - Name: docker-host
+Hostname:<ServerIP>
+
+username: dockeradmin
+
+Advanced > chose Use password authentication, or use a different key
+
+password: *******
+
+Steps to create "Deploy_on_Docker_Host" Jenkin job
+From Jenkins home page select "New Item"
+Enter an item name: Deploy_on_Docker_Host
+
+Copy from: Deploy_on_Tomcat_Server
+Source Code Management:
+
+Repository: https://github.com/yankils/hello-world.git
+Branches to build : */master
+Poll SCM : - * * * *
+
+Build:
+
+Root POM:pom.xml
+Goals and options: clean install package
+Post-build Actions
+
+Send build artifacts over SSH
+SSH Publishers
+SSH Server Name: docker-host
+Transfers > Transfer set
+Source files: webapp/target/*.war
+Remove prefix: webapp/target
+Remote directory: //home//ansadmin or .
+Save and run the job now.
+
+
+Deploy on a Tomcat server
+Jenkins Job name: Deploy_on_Tomcat_Server
+Pre-requisites
+Jenkins server
+Tomcat Server
+Adding Deployment steps
+Install 'deploy to container' plugin. This plugin needs to deploy on tomcat server.
+Install 'deploy to container' plugin without restart
+Manage Jenkins > Jenkins Plugins > available > deploy to container
+Jenkins should need access to the tomcat server to deploy build artifacts. setup credentials to enable this process. use credentials option on Jenkins home page.
+setup credentials
+credentials > jenkins > Global credentials > add credentials
+Username : deployer
+Password : deployer
+id : deployer
+Description: user to deploy on tomcat vm
+Steps to create "Deploy_on_Tomcat_Server" Jenkin job
+From Jenkins home page select "New Item"
+Enter an item name: Deploy_on_Tomcat_Server
+
+Copy from: My_First_Maven_Build
+Source Code Management:
+
+Repository: https://github.com/yankils/hello-world.git
+Branches to build : */master
+Poll SCM : - * * * *
+
+Build:
+
+Root POM:pom.xml
+Goals and options: clean install package
+Post-build Actions
+
+Deploy war/ear to container
+WAR/EAR files : **/*.war
+Containers : Tomcat 8.x
+Credentials: deployer (user created on above)
+Tomcat URL : http://<PUBLIC_IP>:8080
+Save and run the job now.
+
+
+# Pull tomcat latest image from dockerhub 
+From tomcat:latest
+
+# Maintainer
+MAINTAINER "AR Shankar" 
+
+# copy war file on to container 
+COPY ./webapp.war /usr/local/tomcat/webapps
+
+
+Create a First Maven Jenkins job to build hello-world project
+Jenkins Job name: My_First_Maven_Build
+We know how to use work with each and Git, Jenkins independently. What if you want to collaborate these two? that is where Simple DevOps project helps you. Follow the below steps if you are a new guy to DevOps. You love it.
+
+Pre-requisites
+Jenkins server
+Steps to create "My_First_Maven_Build" Jenkin job
+Login to Jenkins console
+Create Jenkins job, Fill the following details,
+Source Code Management:
+Repository: https://github.com/yankils/hello-world.git
+Branches to build : */master
+Build:
+Root POM:pom.xml
+Goals and options: clean install package
+
+
+# Option-1 : Createting docker container using command module 
+---
+- hosts: all
+  become: ture
+
+  tasks:
+  - name: creating docker image using docker command
+    command: docker run -d --name simple-devops-container -p 8080:8080 simple-devops-image
+	
+# option-2 : creating docker container using docker_container module 	
+#  tasks:
+#  - name: create simple-devops-container
+#    docker_container:
+#      name: simple-devops-container
+#      image: simple-devops-image
+#      state: present
+#      recreate: yes
+#      ports:
+#        - "8080:8080"
+© 2021 GitHub, Inc.
+
+
+# Option-1 : Createting docker image using command module 
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: building docker image
+    command: docker build -t simple-devops-image .
+    args:
+      chdir: /opt/docker
+
+# option-2 : creating docker image using docker_image module 
+
+#  tasks:
+#  - name: building docker image
+#    docker_image:
+#      build:
+#        path: /opt/docker
+#      name: simple-devops-image
+#     tag: v1
+#     source: build
+
+
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: stop if we have old docker container
+    command: docker stop simple-devops-container
+    ignore_errors: yes
+
+  - name: remove stopped docker container
+    command: docker rm simple-devops-container
+    ignore_errors: yes
+
+  - name: remove current docker image
+    command: docker rmi simple-devops-image
+    ignore_errors: yes
+#    register: result
+#    failed_when:
+#      - result.rc == 0
+#      - '"docker" not in result.stdout'
+
+
+  - name: building docker image
+    command: docker build -t simple-devops-image .
+    args:
+      chdir: /opt/docker
+
+  - name: creating docker image
+    command: docker run -d --name simple-devops-container -p 8080:8080 simple-devops-image
+
+© 2021 GitHub, Inc.
