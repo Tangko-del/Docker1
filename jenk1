@@ -1,0 +1,144 @@
+Ansible integration with Jenkins
+Follow this on YouTube
+
+Prerequisites:
+Ansible server Get Help Here
+Jenkins Server Get Help Here
+Part-01 Integration Setps
+Install "publish Over SSH"
+
+Manage Jenkins > Manage Plugins > Available > Publish over SSH
+Enable connection between Ansible and Jenkins
+
+Manage Jenkins > Configure System > Publish Over SSH > SSH Servers
+
+SSH Servers:
+Hostname:<ServerIP>
+username: ansadm
+password: *******
+Test the connection "Test Connection"
+
+
+Configure Git pulgin on Jenkins
+Git is one of the most popular tools for version control system. you can pull code from git repositories using jenkins if you use github plugin.
+
+Prerequisites
+Jenkins server
+Install Git on Jenkins server
+Install git packages on jenkins server
+yum install git -y
+Setup Git on jenkins console
+Install git plugin without restart
+
+Manage Jenkins > Jenkins Plugins > available > github
+Configure git path
+
+Manage Jenkins > Global Tool Configuration > git
+
+
+
+Install Jenkins on AWS EC2
+Jenkins is a self-contained Java-based program, ready to run out-of-the-box, with packages for Windows, Mac OS X and other Unix-like operating systems. As an extensible automation server, Jenkins can be used as a simple CI server or turned into the continuous delivery hub for any project.
+
+Prerequisites
+EC2 Instance
+With Internet Access
+Security Group with Port 8080 open for internet
+Java v1.8.x
+Install Java
+We will be using open java for our demo, Get the latest version from http://openjdk.java.net/install/
+
+yum install java-1.8*
+#yum -y install java-1.8.0-openjdk
+Confirm Java Version and set the java home
+
+java -version
+find /usr/lib/jvm/java-1.8* | head -n 3
+JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-1.el8_0.x86_64
+export JAVA_HOME
+PATH=$PATH:$JAVA_HOME
+ # To set it permanently update your .bash_profile
+vi ~/.bash_profile
+The output should be something like this,
+
+[root@~]# java -version
+openjdk version "1.8.0_151"
+OpenJDK Runtime Environment (build 1.8.0_151-b12)
+OpenJDK 64-Bit Server VM (build 25.151-b12, mixed mode)
+Install Jenkins
+You can install jenkins using the rpm or by setting up the repo. We will set up the repo so that we can update it easily in the future.
+
+Get the latest version of jenkins from https://pkg.jenkins.io/redhat-stable/ and install
+
+yum -y install wget
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+yum -y install jenkins
+Start Jenkins
+# Start jenkins service
+service jenkins start
+
+# Setup Jenkins to start at boot,
+chkconfig jenkins on
+Accessing Jenkins
+By default jenkins runs at port 8080, You can access jenkins at
+
+http://YOUR-SERVER-PUBLIC-IP:8080
+Configure Jenkins
+The default Username is admin
+Grab the default password
+Password Location:/var/lib/jenkins/secrets/initialAdminPassword
+Skip Plugin Installation; We can do it later
+Change admin password
+Admin > Configure > Password
+Configure java path
+Manage Jenkins > Global Tool Configuration > JDK
+Create another admin user id
+Test Jenkins Jobs
+Create “new item”
+Enter an item name – My-First-Project
+Chose Freestyle project
+Under the Build section Execute shell: echo "Welcome to Jenkins Demo"
+Save your job
+Build job
+Check "console output"
+© 2021 GitHub, Inc.
+
+
+Install & configure Maven build tool on Jenkins
+Maven is a code build tool which used to convert your code to an artifact. this is a widely used plugin to build in continuous integration
+
+Prerequisites
+Jenkins server
+Install Maven on Jenkins
+Download maven packages https://maven.apache.org/download.cgi onto Jenkins server. In this case, I am using /opt/maven as my installation directory
+Link : https://maven.apache.org/download.cgi
+ # Creating maven directory under /opt
+ mkdir /opt/maven
+ cd /opt/maven
+ # downloading maven version 3.6.0
+ wget http://mirrors.estointernet.in/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz
+ tar -xvzf apache-maven-3.6.1-bin.tar.gz
+Setup M2_HOME and M2 paths in .bash_profile of the user and add these to the path variable
+vi ~/.bash_profile
+M2_HOME=/opt/maven/apache-maven-3.6.1
+M2=$M2_HOME/bin
+PAHT=<Existing_PATH>:$M2_HOME:$M2
+Checkpoint
+logoff and login to check maven version
+
+mvn --version
+So far we have completed the installation of maven software to support maven plugin on the jenkins console. Let's jump onto Jenkins to complete the remaining steps.
+
+Setup maven on Jenkins console
+Install maven plugin without restart
+Manage Jenkins > Jenkins Plugins > available > Maven Invoker
+Manage Jenkins > Jenkins Plugins > available > Maven Integration
+Configure maven path
+Manage Jenkins > Global Tool Configuration > Maven
+
+
+
+
+
+
